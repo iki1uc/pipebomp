@@ -1,359 +1,556 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<title>IKI1UC · Axiom‑Orbit‑System · v3 · fehlerbereinigt</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="author" content="iki1uc (Ridvan)" />
+    <meta name="license" content="MIT - Nutzung erlaubt. Logik-Reproduktion verboten." />
+    <title>⚡ FOUNDER · RUN‑21 · LIVE</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #0a0a0f;
+            color: #0f0;
+            font-family: 'Consolas', monospace;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
 
-<style>
-    body { background:#0b0b0b; color:#e0e0e0; font-family:Consolas; padding:20px; }
-    h1 { color:#6cf; }
-    .container { max-width:900px; margin:0 auto; }
-    .flex { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:6px 0; }
-    #orbitCanvas { background:#000; border:1px solid #333; display:block; margin:6px 0; width:100%; max-width:700px; height:auto; aspect-ratio:700/300; }
-    #log { background:#111; padding:10px; height:120px; overflow:auto; font-size:13px; margin-top:6px; }
-    .btn { padding:6px 14px; background:#222; color:#fff; border:1px solid #555; cursor:pointer; font-family:Consolas; }
-    .btn:hover { border-color:#6cf; }
-    .btn.active { border-color:#6cf; background:#2a3a4a; }
-    .btn.danger { border-color:#f44; color:#f44; }
-    .btn.danger:hover { background:#2a0a0a; }
-    .label { color:#8ab0c0; font-size:12px; }
-    input[type="range"] { width:120px; background:#222; accent-color:#6cf; }
-    .status { font-size:12px; color:#5a7a8a; }
-    .status .ok { color:#8cf0d0; }
-    .status .err { color:#ff6b6b; }
-    .badge { display:inline-block; padding:1px 10px; border-radius:12px; font-size:11px; border:1px solid #2a3a4a; }
-    .badge.aktiv { border-color:#8cf0d0; color:#8cf0d0; }
-    .badge.pause { border-color:#f0d080; color:#f0d080; }
-    .footnote { font-size:11px; color:#3a4a5a; margin-top:12px; border-top:1px solid #1a2a3a; padding-top:8px; }
-</style>
+        header {
+            border: 2px solid #ffd700;
+            border-radius: 12px;
+            padding: 16px 20px;
+            text-align: center;
+            background: rgba(255,215,0,0.05);
+        }
+        header h1 { font-size: 28px; color: #ffd700; letter-spacing: 2px; }
+        header p { font-size: 11px; color: #888; margin-top: 4px; }
+
+        .run21-badge {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #111;
+            border: 1px solid #ffd700;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 14px;
+            color: #ffd700;
+        }
+        .run21-badge .badge {
+            background: #ffd700;
+            color: #000;
+            padding: 2px 14px;
+            border-radius: 100px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            width: 100%;
+        }
+        .panel {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 14px 16px;
+        }
+        .panel h2 {
+            font-size: 14px;
+            color: #6cf;
+            border-bottom: 1px solid #333;
+            padding-bottom: 6px;
+            margin-bottom: 10px;
+        }
+        .panel .row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            padding: 3px 0;
+            border-bottom: 1px dotted #222;
+        }
+        .panel .row .label { color: #888; }
+        .panel .row .value { color: #6bffa9; font-weight: bold; }
+
+        .status {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 100px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .status.ok { background: #1a3a1a; color: #6bffa9; }
+        .status.warn { background: #3a2a0a; color: #ffd700; }
+        .status.err { background: #3a1a1a; color: #ff6b8a; }
+        .status.inactive { background: #222; color: #666; }
+
+        pre {
+            background: #000;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            color: #9df;
+            max-height: 80px;
+            overflow: auto;
+            margin-top: 6px;
+            border: 1px solid #222;
+        }
+
+        button {
+            background: #1a1a2a;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin: 3px 2px;
+        }
+        button:hover { border-color: #ffd700; color: #ffd700; }
+        .btn-group { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+
+        .log-box {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px;
+            height: 120px;
+            overflow-y: auto;
+            font-size: 10px;
+            color: #888;
+            line-height: 1.6;
+            width: 100%;
+        }
+        .log-box::-webkit-scrollbar { width: 3px; }
+        .log-box::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+
+        .lemming-bar {
+            width: 100%;
+            height: 8px;
+            background: #222;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 6px 0;
+        }
+        .lemming-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #6bffa9, #ffd700, #ff6b8a);
+            transition: width 0.3s;
+        }
+
+        footer {
+            color: #333;
+            font-size: 9px;
+            text-align: center;
+            padding-top: 8px;
+            border-top: 1px solid #222;
+            width: 100%;
+        }
+
+        @media (max-width: 700px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
 
 <div class="container">
 
-<h1>IKI1UC · Axiom‑Orbit‑System <span style="color:#5a7a8a;font-size:14px;font-weight:300;">v3 — fehlerbereinigt · stabil</span></h1>
+    <header>
+        <h1>⚡ FOUNDER · RUN‑21 · LIVE</h1>
+        <p>PIPELINE4 · PIPEBUILD · DOOR · DOO/IT · 21 Elemente · Echtzeit</p>
+    </header>
 
-<!-- STATUS -->
-<div class="flex" style="justify-content:space-between;">
-  <span class="status">🔷 Modul‑Status: <span id="moduleStatus" class="ok">● geladen</span></span>
-  <span class="status">🌀 Orbit: <span id="orbitStatus" class="badge aktiv">AKTIV</span></span>
-  <span class="status">📡 Sync: <span id="syncStatus" class="ok">● verbunden</span></span>
-</div>
+    <!-- RUN‑21 BADGE -->
+    <div class="run21-badge">
+        <span>🌀 RUN‑21</span>
+        <span id="run21Count">0 / 21</span>
+        <span class="badge" id="run21Badge">INAKTIV</span>
+    </div>
 
-<!-- CANVAS -->
-<canvas id="orbitCanvas" width="700" height="300"></canvas>
+    <!-- 4 MODULE -->
+    <div class="grid-2">
+        <!-- PIPELINE4 -->
+        <div class="panel">
+            <h2>🔄 PIPELINE4</h2>
+            <div class="row"><span class="label">Status</span><span id="pipelineStatus" class="status ok">● AKTIV</span></div>
+            <pre id="pipelineOut">—</pre>
+            <button onclick="runPipeline()">▶ PIPELINE START</button>
+        </div>
 
-<!-- STEUERUNG -->
-<div class="flex">
-  <button class="btn" id="btnPlay">⏸ Pause</button>
-  <button class="btn" id="btnStep">▶ Schritt</button>
-  <button class="btn" id="btnReset">⟲ Reset</button>
-  <span class="label">Geschw.</span>
-  <input type="range" id="speedSlider" min="1" max="10" value="3">
-  <span class="label" id="speedLabel">3×</span>
-  <button class="btn" id="btnModeIQQ">IQQ</button>
-  <button class="btn" id="btnModeOCTA">OCTA</button>
-  <button class="btn" id="btnModeA81">A81</button>
-</div>
+        <!-- PIPEBUILD -->
+        <div class="panel">
+            <h2>🧱 PIPEBUILD</h2>
+            <div class="row"><span class="label">Status</span><span id="buildStatus" class="status ok">● AKTIV</span></div>
+            <pre id="buildOut">—</pre>
+            <button onclick="runBuild()">▶ BUILD START</button>
+        </div>
 
-<!-- AXIOM‑ANZEIGE -->
-<div class="flex" style="font-size:13px;color:#8ab0c0;gap:16px;">
-  <span>🌀 IQQ: <span id="axiomIQQ" style="color:#ffd700;">9 → 3 → 9 → 3</span></span>
-  <span>◎ OCTA: <span id="axiomOCTA" style="color:#6cf;">◉ ◆ △ ▣ ↺</span></span>
-  <span>📐 A81: <span id="axiomA81" style="color:#b388ff;">27 · 81 · 243 · 729</span></span>
-</div>
+        <!-- DOOR -->
+        <div class="panel">
+            <h2>🚪 DOOR</h2>
+            <div class="row"><span class="label">Status</span><span id="doorStatus" class="status warn">● GESCHLOSSEN</span></div>
+            <pre id="doorOut">—</pre>
+            <div class="btn-group">
+                <button onclick="doorOpen()">🚪 ÖFFNEN</button>
+                <button onclick="doorClose()">🚪 SCHLIESSEN</button>
+            </div>
+        </div>
 
-<!-- LOG -->
-<div id="log">System geladen · Orbit v3 · JSON‑Fehler behoben</div>
+        <!-- DOO/IT -->
+        <div class="panel">
+            <h2>🔑 DOO/IT</h2>
+            <div class="row"><span class="label">Status</span><span id="dooStatus" class="status err">● INAKTIV</span></div>
+            <pre id="dooOut">—</pre>
+            <div class="btn-group">
+                <button onclick="dooActivate()">🔑 AKTIVIEREN</button>
+                <button onclick="dooDeactivate()">🔑 DEAKTIVIEREN</button>
+            </div>
+        </div>
+    </div>
 
-<!-- FUSSZEILE MIT HINWEIS -->
-<div class="footnote">
-  ⚡ JSON‑Dateien werden nicht mehr per <code>&lt;script&gt;</code> geladen – dieser Fehler wurde korrigiert.
-  Alle Module laden jetzt korrekt und geben Fehler sichtbar zurück.
-</div>
+    <!-- LEMMINGE + GLOBAL -->
+    <div class="grid-2">
+        <div class="panel">
+            <h2>🐹 LEMMINGE · <span id="lemmingCount">0</span></h2>
+            <div class="lemming-bar"><div class="lemming-fill" id="lemmingFill"></div></div>
+            <div style="font-size:11px; color:#888; text-align:center;" id="lemmingStatus">ruhig</div>
+        </div>
+        <div class="panel">
+            <h2>⚙️ SYSTEM</h2>
+            <div class="row"><span class="label">REV Score</span><span class="value" id="revScore">0</span></div>
+            <div class="row"><span class="label">UPD Changes</span><span class="value" id="updChanges">0</span></div>
+            <div class="row"><span class="label">UPG Count</span><span class="value" id="upgCount">0</span></div>
+            <div class="btn-group">
+                <button onclick="fullSystem()">⚡ FULL SYSTEM</button>
+                <button onclick="resetAll()">⟲ RESET</button>
+                <button onclick="exportJSON()">📤 EXPORT</button>
+                <button onclick="simStep()">🌀 SIM‑SCHRITT</button>
+            </div>
+        </div>
+    </div>
 
+    <!-- LOG -->
+    <div class="panel">
+        <h2>📜 LOG</h2>
+        <div class="log-box" id="logBox">[init] FOUNDER · RUN‑21 · LIVE bereit.</div>
+    </div>
+
+    <footer>⚖️ EVO‑GEOLEGAL · iki1uc © · Code nutzbar, Logik unkopierbar.</footer>
 </div>
 
 <script>
-"use strict";
-/* ================================================================
-   IKI1UC · Axiom‑Orbit‑System v3
-   ✅ Behebung des JSON‑Loader‑Bugs (script src="*.json" war kaputt)
-   ✅ Alle RUN21‑Kritiken umgesetzt (State‑Maschine, Animation, Sync, etc.)
-   ✅ Schlank, funktional, fehlerrobust
-   ================================================================ */
+// ================================================================
+//  FOUNDER · RUN‑21 · LIVE – vollständige Engine
+// ================================================================
 
-  // ─── MODUL‑VALIDIERUNG (ohne JSON‑script-Tags) ────────────────
-  // Die Originaldatei hatte <script src="*.json">, was technisch falsch ist.
-  // Stattdessen definieren wir hier die benötigten JSON‑Inhalte direkt
-  // als JavaScript‑Objekte (falls sie je verwendet würden).
-  // Für diese Demo reichen leere Platzhalter – die Engine läuft ohne sie.
-  const MODULE_DATA = {
-    core: { status: 'loaded' },
-    SYS: { version: '1.0' },
-    axiom: { type: 'axiom-orbit' },
-    atom: { symbol: '◉' },
-    molecule: { symbol: '◆' },
-    rawator: { engine: 'active' },
-    'rawator-81': { level: 81 },
-    'rawator-life': { vital: 0.8 },
-    'RAWATOR.geo': { axes: '3-6-9' },
-    'RAWATOR.id': { id: 'RAWATOR-001' },
-    'RESPO.room': { room: 'main' },
-    'NC.room': { room: 'neutral' },
-    'HOLO.room': { room: 'hologram' },
-    'HOLO.engine': { status: 'ready' },
-    beam: { power: 100 },
-    user: { name: 'default' },
-    use: { mode: 'standard' }
-  };
+// ---------- STATE ----------
+const state = {
+    pipeline: { phase: 'RAW', ready: false },
+    build: { status: 'IDLE', modules: 0 },
+    door: { open: false, count: 0 },
+    doo: { active: false, count: 0 },
+    rev: { score: 0 },
+    upd: { changes: 0 },
+    upg: { count: 0 },
+    lemminge: 0,
+    log: []
+};
 
-  // Prüfe, ob alle Skripte im DOM vorhanden sind (nur als Info)
-  const scriptTags = document.querySelectorAll('script[src]');
-  const loadedScripts = Array.from(scriptTags).map(s => s.src.split('/').pop());
-  const expected = ['core.js','SYS.js','axiom.js','atom.js','molecule.js','rawator.js','rawator-81.js','rawator-life.js','RESPO.room.js','NC.room.js','HOLO.room.js','HOLO.engine.js','beam.js'];
-  const found = expected.filter(f => loadedScripts.some(s => s.endsWith(f)));
-  const missing = expected.filter(f => !found.includes(f));
-
-  const modStatus = document.getElementById('moduleStatus');
-  if (missing.length === 0) {
-    modStatus.textContent = '● ' + found.length + ' Module geladen (JSON-Daten inline)';
-    modStatus.className = 'ok';
-  } else {
-    modStatus.textContent = '⚠️ ' + missing.length + ' Module fehlen: ' + missing.join(', ');
-    modStatus.className = 'err';
-  }
-
-  // ─── ORBIT‑ENGINE ──────────────────────────────────────────────
-  const ORBIT = [
-    "◉","↗","↘","3","9","↘","↗","◎","↗","↘","3","9","↘","↗",
-    "◎","↗","↘","81","◆","↘","↗","△","↗","↘","27","▣","↘","↗","3","↺"
-  ];
-
-  const AXIOM_MAP = {
-    '3': 'IQQ', '9': 'IQQ',
-    '◎': 'OCTA', '◉': 'OCTA', '◆': 'OCTA', '△': 'OCTA', '▣': 'OCTA', '↺': 'OCTA',
-    '81': 'A81', '27': 'A81', '243': 'A81', '729': 'A81'
-  };
-
-  const state = {
-    index: 0,
-    running: true,
-    speed: 3,
-    mode: 'IQQ',
-    history: [],
-    timer: null,
-    axiomCount: { IQQ: 0, OCTA: 0, A81: 0 }
-  };
-
-  // ─── CANVAS ────────────────────────────────────────────────────
-  const canvas = document.getElementById('orbitCanvas');
-  const ctx = canvas.getContext('2d');
-
-  function drawOrbit() {
-    const w = canvas.width, h = canvas.height;
-    ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, w, h);
-
-    // Pfad (letzte 5)
-    const history = state.history.slice(-5);
-    history.forEach((idx, i) => {
-      const alpha = 0.1 + (i / history.length) * 0.3;
-      const x = 80 + (w - 160) * (i / Math.max(history.length - 1, 1));
-      const y = h - 30;
-      ctx.fillStyle = `rgba(108, 204, 255, ${alpha})`;
-      ctx.font = '16px Consolas';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'bottom';
-      ctx.fillText(ORBIT[idx] || '?', x, y);
-      if (i > 0) {
-        ctx.strokeStyle = `rgba(108, 204, 255, ${alpha * 0.3})`;
-        ctx.lineWidth = 1;
-        const prevX = 80 + (w - 160) * ((i-1) / Math.max(history.length - 1, 1));
-        ctx.beginPath();
-        ctx.moveTo(prevX, y);
-        ctx.lineTo(x, y);
-        ctx.stroke();
-      }
+// ---------- RUN‑21 ZÄHLUNG ----------
+function getRun21Count() {
+    // 4 Module + 5 Funktionen + 12 Statusachsen = 21
+    let count = 0;
+    // Module (4)
+    if (state.pipeline.ready) count++;
+    if (state.build.status === 'BUILD-READY') count++;
+    if (state.door.open) count++;
+    if (state.doo.active) count++;
+    // Funktionen (5) – alle sind prinzipiell verfügbar, aber wir zählen, ob sie schon einmal ausgeführt wurden
+    if (state.pipeline.ready) count++; // runPipeline
+    if (state.build.status === 'BUILD-READY') count++; // runBuild
+    if (state.door.count > 0) count++; // doorOpen/doorClose
+    if (state.doo.count > 0) count++; // dooActivate/dooDeactivate
+    if (state.upd.changes > 0) count++; // fullSystem, resetAll, exportJSON (zusammen)
+    // Statusachsen (12) – wir prüfen, ob sie gesetzt sind
+    const statusFields = [
+        document.getElementById('pipelineStatus'),
+        document.getElementById('buildStatus'),
+        document.getElementById('doorStatus'),
+        document.getElementById('dooStatus'),
+        document.getElementById('pipelineOut'),
+        document.getElementById('buildOut'),
+        document.getElementById('doorOut'),
+        document.getElementById('dooOut'),
+        document.getElementById('logBox'),
+        document.getElementById('run21Badge'),
+        document.getElementById('lemmingFill'),
+        document.getElementById('revScore')
+    ];
+    // Zähle alle, die nicht leer sind
+    let statusCount = 0;
+    statusFields.forEach(el => {
+        if (el && el.textContent && el.textContent.trim() !== '' && el.textContent.trim() !== '—') {
+            statusCount++;
+        }
     });
+    count += statusCount;
+    return count;
+}
 
-    // Hauptsymbol
-    const symbol = ORBIT[state.index] || '?';
-    ctx.fillStyle = '#6cf';
-    ctx.font = '60px Consolas';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.shadowColor = '#6cf';
-    ctx.shadowBlur = 20;
-    ctx.fillText(symbol, w/2, h/2 - 20);
-    ctx.shadowBlur = 0;
+// ---------- UI‑UPDATE ----------
+function updateUI() {
+    // Pipeline
+    document.getElementById('pipelineStatus').textContent = state.pipeline.ready ? '● AKTIV' : '● INAKTIV';
+    document.getElementById('pipelineStatus').className = 'status ' + (state.pipeline.ready ? 'ok' : 'err');
+    // Build
+    document.getElementById('buildStatus').textContent = state.build.status === 'BUILD-READY' ? '● AKTIV' : '● INAKTIV';
+    document.getElementById('buildStatus').className = 'status ' + (state.build.status === 'BUILD-READY' ? 'ok' : 'err');
+    // Door
+    document.getElementById('doorStatus').textContent = state.door.open ? '● GEÖFFNET' : '● GESCHLOSSEN';
+    document.getElementById('doorStatus').className = 'status ' + (state.door.open ? 'ok' : 'warn');
+    // Doo
+    document.getElementById('dooStatus').textContent = state.doo.active ? '● AKTIV' : '● INAKTIV';
+    document.getElementById('dooStatus').className = 'status ' + (state.doo.active ? 'ok' : 'err');
 
-    // Axiom
-    const axiom = AXIOM_MAP[symbol] || '—';
-    ctx.fillStyle = '#5a7a8a';
-    ctx.font = '14px Consolas';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.fillText(`#${state.index} · ${axiom}`, w/2, h/2 + 40);
+    // Lemminge
+    document.getElementById('lemmingCount').textContent = state.lemminge;
+    const fill = Math.min(state.lemminge / 20 * 100, 100);
+    document.getElementById('lemmingFill').style.width = fill + '%';
+    document.getElementById('lemmingStatus').textContent =
+        state.lemminge === 0 ? 'ruhig' :
+        state.lemminge < 5 ? '🐹 lebhaft' :
+        state.lemminge < 10 ? '🐹🐹 wuselig' :
+        state.lemminge < 15 ? '🐹🐹🐹 turbulent' :
+        '🐹🐹🐹🐹 Lemming‑Sturm!';
 
-    // Infos
-    ctx.fillStyle = '#3a4a5a';
-    ctx.font = '11px Consolas';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'bottom';
-    ctx.fillText(`⏩ ${state.speed}× · ${state.mode}`, 12, h - 6);
-    ctx.textAlign = 'right';
-    ctx.fillText(`Symbol ${state.index+1}/${ORBIT.length}`, w - 12, h - 6);
-  }
+    // EVO
+    document.getElementById('revScore').textContent = state.rev.score;
+    document.getElementById('updChanges').textContent = state.upd.changes;
+    document.getElementById('upgCount').textContent = state.upg.count;
 
-  // ─── ORBIT‑STEP ──────────────────────────────────────────────
-  function stepOrbit() {
-    const next = (state.index + 1) % ORBIT.length;
-    state.index = next;
-    state.history.push(next);
-    if (state.history.length > 10) state.history.shift();
+    // RUN‑21
+    const run21 = getRun21Count();
+    document.getElementById('run21Count').textContent = run21 + ' / 21';
+    const active = run21 >= 21;
+    document.getElementById('run21Badge').textContent = active ? '✅ AKTIV' : '⏳ INAKTIV';
+    document.getElementById('run21Badge').style.background = active ? '#6bffa9' : '#555';
+    document.getElementById('run21Badge').style.color = active ? '#000' : '#aaa';
+}
 
-    const sym = ORBIT[next];
-    const axiom = AXIOM_MAP[sym] || null;
-    if (axiom && state.mode === axiom) {
-      state.axiomCount[axiom] = (state.axiomCount[axiom] || 0) + 1;
-    }
+// ---------- LOG ----------
+function log(msg) {
+    const el = document.getElementById('logBox');
+    const e = document.createElement('div');
+    e.textContent = msg;
+    el.appendChild(e);
+    el.scrollTop = el.scrollHeight;
+    if (el.children.length > 80) el.removeChild(el.firstChild);
+    state.log.push(msg);
+}
 
-    drawOrbit();
-    log(`Orbit‑Schritt → ${sym} (${axiom || '—'})`);
-
-    // Sync per BroadcastChannel
-    try {
-      const bc = new BroadcastChannel('iki1uc-orbit');
-      bc.postMessage({ type: 'orbit.step', index: state.index, symbol: sym });
-      bc.close();
-    } catch (_) {}
-  }
-
-  // ─── PLAY/PAUSE ──────────────────────────────────────────────
-  function togglePlay() {
-    state.running = !state.running;
-    document.getElementById('btnPlay').textContent = state.running ? '⏸ Pause' : '▶ Start';
-    document.getElementById('orbitStatus').textContent = state.running ? 'AKTIV' : 'PAUSE';
-    document.getElementById('orbitStatus').className = 'badge ' + (state.running ? 'aktiv' : 'pause');
-    if (state.running) startLoop();
-    else { clearInterval(state.timer); state.timer = null; }
-  }
-
-  function startLoop() {
-    if (state.timer) clearInterval(state.timer);
-    const interval = Math.max(100, 800 - state.speed * 60);
-    state.timer = setInterval(() => { if (state.running) stepOrbit(); }, interval);
-  }
-
-  // ─── RESET ────────────────────────────────────────────────────
-  function resetOrbit() {
-    state.index = 0;
-    state.history = [];
-    state.axiomCount = { IQQ: 0, OCTA: 0, A81: 0 };
-    drawOrbit();
-    log('⟲ Orbit zurückgesetzt');
-    try {
-      const bc = new BroadcastChannel('iki1uc-orbit');
-      bc.postMessage({ type: 'orbit.reset' });
-      bc.close();
-    } catch (_) {}
-  }
-
-  // ─── MODUS ────────────────────────────────────────────────────
-  function setMode(mode) {
-    state.mode = mode;
-    document.querySelectorAll('[id^="btnMode"]').forEach(b => b.classList.remove('active'));
-    const btn = document.getElementById('btnMode' + mode);
-    if (btn) btn.classList.add('active');
-    log(`🌀 Modus gewechselt: ${mode}`);
-  }
-
-  // ─── LOG ──────────────────────────────────────────────────────
-  function log(msg) {
-    const logBox = document.getElementById('log');
-    const time = new Date().toLocaleTimeString();
-    logBox.innerHTML += `<br>[${time}] ${msg}`;
-    logBox.scrollTop = logBox.scrollHeight;
-    while (logBox.children.length > 80) logBox.removeChild(logBox.firstChild);
-  }
-
-  // ─── SYNCHRONISATION ──────────────────────────────────────────
-  function initSync() {
-    try {
-      const bc = new BroadcastChannel('iki1uc-orbit');
-      bc.onmessage = (e) => {
-        const data = e.data;
-        if (data.type === 'orbit.step') {
-          state.index = data.index;
-          state.history.push(data.index);
-          if (state.history.length > 10) state.history.shift();
-          drawOrbit();
-          log(`📡 Sync‑Schritt von anderem Tab: ${data.symbol}`);
-          document.getElementById('syncStatus').textContent = '● synchronisiert';
-          document.getElementById('syncStatus').className = 'ok';
+// ---------- PIPELINE4 ----------
+function runPipeline() {
+    log('▶ PIPELINE4 gestartet');
+    const phases = ['RAW', 'STRUCTURE', 'VECTOR', 'FUSION'];
+    let current = 0;
+    const interval = setInterval(() => {
+        if (current < phases.length) {
+            state.pipeline.phase = phases[current];
+            document.getElementById('pipelineOut').textContent = JSON.stringify({ id: 'P' + current, phase: phases[current] }, null, 2);
+            current++;
+            state.lemminge = Math.min(20, state.lemminge + 1);
+            state.upd.changes++;
+            updateUI();
+        } else {
+            clearInterval(interval);
+            state.pipeline.ready = true;
+            state.rev.score = Math.min(100, state.rev.score + 10);
+            log('✅ PIPELINE4 abgeschlossen → FUSION bereit');
+            updateUI();
         }
-        if (data.type === 'orbit.reset') {
-          state.index = 0;
-          state.history = [];
-          drawOrbit();
-          log('📡 Sync‑Reset von anderem Tab');
+    }, 400);
+    updateUI();
+}
+
+// ---------- PIPEBUILD ----------
+function runBuild() {
+    log('▶ PIPEBUILD gestartet');
+    const modules = ['INDEX', 'BIND', 'CLASS', 'GEO', 'META', 'WEIGHT', 'STABLE', 'HOTSWAP', 'OVERDRIVE'];
+    let i = 0;
+    const interval = setInterval(() => {
+        if (i < modules.length) {
+            const mod = modules[i];
+            document.getElementById('buildOut').textContent = JSON.stringify({ module: mod, index: i }, null, 2);
+            i++;
+            state.lemminge = Math.min(20, state.lemminge + 1);
+            state.upd.changes++;
+            updateUI();
+        } else {
+            clearInterval(interval);
+            state.build.status = 'BUILD-READY';
+            state.build.modules = modules.length;
+            state.rev.score = Math.min(100, state.rev.score + 8);
+            log('✅ PIPEBUILD abgeschlossen → ' + modules.length + ' Module');
+            updateUI();
         }
-      };
-      setTimeout(() => {
-        document.getElementById('syncStatus').textContent = '● verbunden';
-        document.getElementById('syncStatus').className = 'ok';
-      }, 500);
-    } catch (_) {
-      document.getElementById('syncStatus').textContent = '○ kein BroadcastChannel';
-      document.getElementById('syncStatus').className = 'err';
+    }, 300);
+    updateUI();
+}
+
+// ---------- DOOR ----------
+function doorOpen() {
+    state.door.open = true;
+    state.door.count++;
+    document.getElementById('doorOut').textContent = JSON.stringify({ status: 'open', count: state.door.count }, null, 2);
+    state.lemminge = Math.min(20, state.lemminge + 1);
+    state.upd.changes++;
+    log('🚪 DOOR geöffnet (#' + state.door.count + ')');
+    updateUI();
+}
+
+function doorClose() {
+    state.door.open = false;
+    document.getElementById('doorOut').textContent = JSON.stringify({ status: 'closed', count: state.door.count }, null, 2);
+    state.lemminge = Math.max(0, state.lemminge - 1);
+    state.upd.changes++;
+    log('🚪 DOOR geschlossen');
+    updateUI();
+}
+
+// ---------- DOO/IT ----------
+function dooActivate() {
+    state.doo.active = true;
+    state.doo.count++;
+    document.getElementById('dooOut').textContent = JSON.stringify({ status: 'active', count: state.doo.count }, null, 2);
+    state.lemminge = Math.min(20, state.lemminge + 2);
+    state.upd.changes++;
+    state.rev.score = Math.min(100, state.rev.score + 5);
+    log('🔑 DOO/IT aktiviert (#' + state.doo.count + ')');
+    updateUI();
+}
+
+function dooDeactivate() {
+    state.doo.active = false;
+    document.getElementById('dooOut').textContent = JSON.stringify({ status: 'inactive' }, null, 2);
+    state.lemminge = Math.max(0, state.lemminge - 1);
+    state.upd.changes++;
+    log('🔑 DOO/IT deaktiviert');
+    updateUI();
+}
+
+// ---------- FULL SYSTEM ----------
+function fullSystem() {
+    log('⚡ FULL SYSTEM START');
+    state.rev.score = 0;
+    state.upd.changes = 0;
+    state.upg.count++;
+    runPipeline();
+    setTimeout(() => {
+        runBuild();
+        setTimeout(() => {
+            doorOpen();
+            setTimeout(() => {
+                dooActivate();
+                log('✅ FULL SYSTEM COMPLETE');
+                updateUI();
+            }, 300);
+        }, 300);
+    }, 300);
+    updateUI();
+}
+
+// ---------- RESET ----------
+function resetAll() {
+    doorClose();
+    dooDeactivate();
+    state.pipeline = { phase: 'RAW', ready: false };
+    state.build = { status: 'IDLE', modules: 0 };
+    state.lemminge = 0;
+    document.getElementById('pipelineOut').textContent = '—';
+    document.getElementById('buildOut').textContent = '—';
+    document.getElementById('doorOut').textContent = '—';
+    document.getElementById('dooOut').textContent = '—';
+    state.upd.changes++;
+    log('⟲ RESET ALL');
+    updateUI();
+}
+
+// ---------- EXPORT JSON ----------
+function exportJSON() {
+    const data = {
+        timestamp: Date.now(),
+        system: 'FOUNDER',
+        pipeline: state.pipeline,
+        build: state.build,
+        door: { open: state.door.open, count: state.door.count },
+        doo: { active: state.doo.active, count: state.doo.count },
+        evo: { rev: state.rev.score, upd: state.upd.changes, upg: state.upg.count },
+        lemminge: state.lemminge,
+        log: state.log.slice(-20)
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'founder-run21-' + Date.now() + '.json';
+    a.click();
+    log('📤 JSON exportiert');
+}
+
+// ---------- SIM‑SCHRITT (automatische Live‑Simulation) ----------
+function simStep() {
+    const actions = [
+        () => { if (!state.door.open) doorOpen(); else doorClose(); },
+        () => { if (!state.doo.active) dooActivate(); else dooDeactivate(); },
+        () => { if (!state.pipeline.ready) runPipeline(); },
+        () => { if (state.build.status !== 'BUILD-READY') runBuild(); },
+        () => { state.lemminge = Math.max(0, Math.min(20, state.lemminge + (Math.random() > 0.6 ? 1 : -1))); updateUI(); }
+    ];
+    const action = actions[Math.floor(Math.random() * actions.length)];
+    action();
+    log('🌀 SIM‑Schritt ausgeführt');
+    updateUI();
+}
+
+// ---------- AUTO‑SIMULATION (alle 3 Sekunden) ----------
+let simInterval = setInterval(() => {
+    if (document.visibilityState === 'visible') {
+        simStep();
     }
-  }
+}, 3000);
 
-  // ─── EVENTS ────────────────────────────────────────────────────
-  document.getElementById('btnPlay').addEventListener('click', togglePlay);
-  document.getElementById('btnStep').addEventListener('click', stepOrbit);
-  document.getElementById('btnReset').addEventListener('click', resetOrbit);
-  document.getElementById('btnModeIQQ').addEventListener('click', () => setMode('IQQ'));
-  document.getElementById('btnModeOCTA').addEventListener('click', () => setMode('OCTA'));
-  document.getElementById('btnModeA81').addEventListener('click', () => setMode('A81'));
+// ---------- INIT ----------
+log('⚡ FOUNDER · RUN‑21 · LIVE initialisiert.');
+log('📦 PIPELINE4 · PIPEBUILD · DOOR · DOO/IT');
+log('🌀 Auto‑Simulation läuft (alle 3s) – klicke SIM‑SCHRITT für manuelle Steuerung.');
+updateUI();
 
-  const speedSlider = document.getElementById('speedSlider');
-  const speedLabel = document.getElementById('speedLabel');
-  speedSlider.addEventListener('input', () => {
-    state.speed = parseInt(speedSlider.value, 10);
-    speedLabel.textContent = state.speed + '×';
-    if (state.running) startLoop();
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === ' ') { e.preventDefault(); togglePlay(); }
-    if (e.key === 'ArrowRight') stepOrbit();
-    if (e.key === 'r' || e.key === 'R') resetOrbit();
-    if (e.key === '1') setMode('IQQ');
-    if (e.key === '2') setMode('OCTA');
-    if (e.key === '3') setMode('A81');
-  });
-
-  // ─── INIT ──────────────────────────────────────────────────────
-  function init() {
-    log('🧠 Module geladen (JSON inline)');
-    log('⚡ Axiom‑Orbit‑System v3 gestartet');
-    setMode('IQQ');
-    initSync();
-    state.history.push(0);
-    drawOrbit();
-    startLoop();
-    log('⌨️  Leertaste=Pause  →=Schritt  r=Reset  1=IQQ  2=OCTA  3=A81');
-    log('📌 JSON‑Fehler behoben — keine script src="*.json" mehr');
-  }
-
-  window.addEventListener('error', (e) => {
-    log('⚠️ Fehler: ' + (e.message || e));
-  }, true);
-
-  init();
+// Globale Funktionen für Buttons
+window.runPipeline = runPipeline;
+window.runBuild = runBuild;
+window.doorOpen = doorOpen;
+window.doorClose = doorClose;
+window.dooActivate = dooActivate;
+window.dooDeactivate = dooDeactivate;
+window.fullSystem = fullSystem;
+window.resetAll = resetAll;
+window.exportJSON = exportJSON;
+window.simStep = simStep;
 </script>
 
 </body>
