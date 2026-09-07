@@ -2,12 +2,12 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>IKI1UC · NAVI · ATOM-UHR · ORBIT · sli.open</title>
+<title>IKI1UC · NAVI · ATOM-UHR · ORBIT · ROLLEN-SCANNER</title>
 
 <style>
     /* ===== BASIS ===== */
     body { background:#0b0b0b; color:#e0e0e0; font-family:Consolas; padding:15px; }
-    .container { max-width:1100px; margin:0 auto; }
+    .container { max-width:1200px; margin:0 auto; }
     h1 { color:#6cf; font-size:1.4rem; }
     .flex { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:6px 0; }
     .grid-2 { display:grid; grid-template-columns: 2fr 1fr; gap:15px; }
@@ -16,9 +16,9 @@
     /* ===== CANVAS ===== */
     #orbitCanvas { background:#000; border:1px solid #333; display:block; width:100%; height:auto; aspect-ratio:700/300; }
 
-    /* ===== NAVI-PANEL ===== */
-    .navi-panel { background:#111; border:1px solid #2a3a4a; border-radius:8px; padding:10px; }
-    .navi-panel h2 { color:#8ab0c0; font-size:14px; margin:0 0 8px 0; border-bottom:1px solid #2a3a4a; padding-bottom:4px; }
+    /* ===== PANELS ===== */
+    .panel { background:#111; border:1px solid #2a3a4a; border-radius:8px; padding:10px; margin-bottom:10px; }
+    .panel h2 { color:#8ab0c0; font-size:14px; margin:0 0 8px 0; border-bottom:1px solid #2a3a4a; padding-bottom:4px; }
     .navi-row { display:flex; justify-content:space-between; font-size:13px; padding:2px 0; }
     .navi-row .label { color:#5a7a8a; }
     .navi-row .value { color:#8cf0d0; font-weight:bold; }
@@ -35,6 +35,24 @@
     .waypoint-item { background:#1a1a2a; padding:2px 8px; border-radius:12px; font-size:12px; border:1px solid #2a3a4a; }
     .waypoint-item.active { border-color:#6cf; background:#1a2a3a; color:#6cf; }
 
+    /* ===== ROLLEN-SCANNER ===== */
+    #roleScanBox {
+        background:#0a0a12;
+        border:1px solid #2a3a4a;
+        border-radius:4px;
+        padding:6px;
+        max-height:120px;
+        overflow-y:auto;
+        font-size:12px;
+        line-height:1.5;
+        margin-top:4px;
+    }
+    #roleScanBox .entry { padding:2px 4px; border-bottom:1px solid #1a1a2a; }
+    #roleScanBox .leader { color:#ffd700; }
+    #roleScanBox .follower { color:#888; }
+    #roleScanBox .change { color:#ff8a9b; }
+    #roleScanBox .spielverderber { color:#ff6b6b; font-weight:bold; }
+
     /* ===== BUTTONS / BADGES ===== */
     .btn { padding:5px 14px; background:#222; color:#fff; border:1px solid #555; cursor:pointer; font-family:Consolas; font-size:13px; }
     .btn:hover { border-color:#6cf; }
@@ -46,6 +64,8 @@
     .badge.aktiv { border-color:#8cf0d0; color:#8cf0d0; }
     .badge.offen { border-color:#ffd700; color:#ffd700; background:#1a1a0a; }
     .badge.geschlossen { border-color:#888; color:#888; }
+    .badge.leader { border-color:#ffd700; color:#ffd700; background:#1a1a0a; }
+    .badge.follower { border-color:#888; color:#888; }
 
     /* ===== LOG ===== */
     #log { background:#111; padding:10px; height:100px; overflow:auto; font-size:12px; margin-top:10px; border:1px solid #2a3a4a; border-radius:4px; }
@@ -57,7 +77,7 @@
 
     <!-- HEADER -->
     <div class="flex" style="justify-content:space-between;">
-        <h1>🚢 IKI1UC · NAVI · ATOM‑UHR · ORBIT <span style="color:#5a7a8a;font-size:14px;font-weight:300;">v3 — mit sli.open</span></h1>
+        <h1>🚢 IKI1UC · NAVI · ATOM‑UHR · ORBIT <span style="color:#5a7a8a;font-size:14px;font-weight:300;">mit Rollen‑Scanner</span></h1>
         <div>
             <span class="badge" id="sliStatusBadge">🔒 geschlossen</span>
             <button class="btn sli" id="btnSliOpen">🔓 sli.open</button>
@@ -69,7 +89,6 @@
         <!-- Linke Spalte: Canvas -->
         <div>
             <canvas id="orbitCanvas" width="700" height="300"></canvas>
-            <!-- Kurzstatus -->
             <div class="flex" style="justify-content:space-between; font-size:12px; color:#5a7a8a; margin-top:4px;">
                 <span>🌀 Orbit: <span id="orbitStatus" class="badge aktiv">AKTIV</span></span>
                 <span>👑 Rolle: <span id="roleStatus" class="badge leader">LEADER</span></span>
@@ -77,40 +96,56 @@
             </div>
         </div>
 
-        <!-- Rechte Spalte: Navigation + Atomuhr -->
-        <div class="navi-panel">
-            <h2>🧭 NAVIGATION · EIGENSTATION</h2>
-            <div class="navi-row"><span class="label">Position (Orbit‑Index)</span><span class="value" id="naviIndex">0</span></div>
-            <div class="navi-row"><span class="label">Symbol</span><span class="value orange" id="naviSymbol">◉</span></div>
-            <div class="navi-row"><span class="label">Kurs (Heading)</span><span class="value" id="naviHeading">000°</span></div>
-            <div class="navi-row"><span class="label">Geschw. (Knoten)</span><span class="value pink" id="naviSpeed">0.0</span></div>
-            <div class="navi-row"><span class="label">Axiom‑Modus</span><span class="value" id="naviMode">IQQ</span></div>
+        <!-- Rechte Spalte: Navigation + Atomuhr + Rollen-Scanner -->
+        <div>
+            <!-- NAVI-PANEL -->
+            <div class="panel">
+                <h2>🧭 NAVIGATION · EIGENSTATION</h2>
+                <div class="navi-row"><span class="label">Position (Orbit‑Index)</span><span class="value" id="naviIndex">0</span></div>
+                <div class="navi-row"><span class="label">Symbol</span><span class="value orange" id="naviSymbol">◉</span></div>
+                <div class="navi-row"><span class="label">Kurs (Heading)</span><span class="value" id="naviHeading">000°</span></div>
+                <div class="navi-row"><span class="label">Geschw. (Knoten)</span><span class="value pink" id="naviSpeed">0.0</span></div>
+                <div class="navi-row"><span class="label">Axiom‑Modus</span><span class="value" id="naviMode">IQQ</span></div>
 
-            <!-- ATOM-UHR -->
-            <div class="atom-clock">
-                <div class="time" id="atomTime">00:00:00.000</div>
-                <div class="sub">⚛️ Atomuhr · Takt <span id="atomTick">0</span> · Δt <span id="atomDelta">0.0</span>ms</div>
+                <!-- ATOM-UHR -->
+                <div class="atom-clock">
+                    <div class="time" id="atomTime">00:00:00.000</div>
+                    <div class="sub">⚛️ Atomuhr · Takt <span id="atomTick">0</span> · Δt <span id="atomDelta">0.0</span>ms</div>
+                </div>
+
+                <!-- WEGPUNKTE -->
+                <div style="margin-top:8px;">
+                    <div style="font-size:11px; color:#5a7a8a;">📍 Wegpunkte (Orbit‑Pfad):</div>
+                    <div class="waypoint-list" id="waypointList"></div>
+                </div>
+
+                <!-- STEUERUNG -->
+                <div class="flex" style="margin-top:8px;">
+                    <button class="btn" id="btnPlay">⏸ Pause</button>
+                    <button class="btn" id="btnStep">▶ Schritt</button>
+                    <button class="btn" id="btnReset">⟲ Reset</button>
+                    <span class="label">Speed</span>
+                    <input type="range" id="speedSlider" min="1" max="10" value="3" style="width:80px;">
+                    <span class="label" id="speedLabel">3×</span>
+                </div>
             </div>
 
-            <!-- WEGPUNKTE (die Symbole des Pfades) -->
-            <div style="margin-top:8px;">
-                <div style="font-size:11px; color:#5a7a8a;">📍 Wegpunkte (Orbit‑Pfad):</div>
-                <div class="waypoint-list" id="waypointList"></div>
-            </div>
-
-            <!-- Steuerung -->
-            <div class="flex" style="margin-top:8px;">
-                <button class="btn" id="btnPlay">⏸ Pause</button>
-                <button class="btn" id="btnStep">▶ Schritt</button>
-                <button class="btn" id="btnReset">⟲ Reset</button>
-                <span class="label">Speed</span>
-                <input type="range" id="speedSlider" min="1" max="10" value="3" style="width:80px;">
-                <span class="label" id="speedLabel">3×</span>
+            <!-- ROLLEN-SCANNER PANEL -->
+            <div class="panel">
+                <h2>🔍 ROLLEN-SCANNER · LIVE <span style="font-size:10px; color:#5a7a8a;">(letzte 20 Wechsel)</span></h2>
+                <div id="roleScanBox">
+                    <div class="entry">📡 Scanner gestartet – warte auf erste Rolle</div>
+                </div>
+                <div style="margin-top:4px; font-size:10px; color:#5a7a8a;">
+                    <span id="scannerStatus">● aktiv</span>
+                    <span style="margin-left:12px;">🔄 Wechsel: <span id="changeCount">0</span></span>
+                    <span style="margin-left:12px;">👑 aktuell: <span id="currentRoleDisplay" class="badge leader">LEADER</span></span>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- AXIOM-ANZEIGE (unterhalb) -->
+    <!-- AXIOM-ANZEIGE -->
     <div class="flex" style="font-size:13px;color:#8ab0c0;gap:20px; margin-top:8px;">
         <span>🌀 IQQ: <span id="axiomIQQ" style="color:#ffd700;">9 → 3 → 9 → 3</span></span>
         <span>◎ OCTA: <span id="axiomOCTA" style="color:#6cf;">◉ ◆ △ ▣ ↺</span></span>
@@ -118,14 +153,14 @@
     </div>
 
     <!-- LOG -->
-    <div id="log">System geladen · Orbit v3 · Navi + Atomuhr aktiv · sli.open geschlossen</div>
+    <div id="log">System geladen · Orbit v3 · Navi + Atomuhr + Rollen‑Scanner aktiv</div>
 
 </div>
 
 <script>
 "use strict";
 /* ================================================================
-   IKI1UC · Orbit v3 + NAVI + ATOM-UHR + sli.open
+   IKI1UC · Orbit v3 + NAVI + ATOM-UHR + ROLLEN-SCANNER
    ================================================================ */
 
   // ─── KONFIGURATION ──────────────────────────────────────────────
@@ -150,17 +185,25 @@
     isLeader: false,
     accumulator: 0,
     lastFrame: null,
-    sliOpen: false,          // 🔓 sli.open – wenn true, ist die Schleuse offen
+    sliOpen: false,
     atomTick: 0,
-    atomDelta: 0
+    atomDelta: 0,
+    // Rollen-Scanner
+    roleScan: {
+      lastRole: null,
+      changes: [],
+      changeCount: 0,
+      tabId: Math.random().toString(36).substring(2, 6).toUpperCase() // zufällige Tab-ID
+    }
   };
 
   // ─── DOM-REFERENZEN ────────────────────────────────────────────
   const canvas = document.getElementById('orbitCanvas');
   const ctx = canvas.getContext('2d');
   const logBox = document.getElementById('log');
+  const roleScanBox = document.getElementById('roleScanBox');
 
-  // ─── LEADER-ELECTION (wie gehabt) ──────────────────────────────
+  // ─── LEADER-ELECTION ──────────────────────────────────────────
   const LEADER_KEY = 'iki1uc-orbit-leader';
   const LEADER_TIMEOUT = 2000;
   const HEARTBEAT_EVERY = 500;
@@ -177,6 +220,8 @@
       localStorage.setItem(LEADER_KEY, String(now));
       state.isLeader = true;
       updateRoleBadge();
+      // Rollenwechsel sofort erfassen
+      scanRole('LEADER (übernommen)');
       log('👑 Leader übernommen');
     }
   }
@@ -185,6 +230,9 @@
     const el = document.getElementById('roleStatus');
     el.textContent = state.isLeader ? 'LEADER' : 'FOLLOWER';
     el.className = 'badge ' + (state.isLeader ? 'leader' : 'follower');
+    // Aktuelle Rolle im Scanner anzeigen
+    document.getElementById('currentRoleDisplay').textContent = state.isLeader ? 'LEADER' : 'FOLLOWER';
+    document.getElementById('currentRoleDisplay').className = 'badge ' + (state.isLeader ? 'leader' : 'follower');
   }
 
   setInterval(tryClaimLeadership, HEARTBEAT_EVERY);
@@ -221,6 +269,10 @@
         updateSliUI();
         log(`🔓 sli.open = ${state.sliOpen ? 'OFFEN' : 'GESCHLOSSEN'}`);
       }
+      // Rollenwechsel von anderen Tabs empfangen
+      if (data.type === 'role.change') {
+        addRoleChangeEntry(data.msg, data.tabId);
+      }
     };
     setTimeout(() => syncStatus('● verbunden', 'ok'), 500);
   } catch (_) {
@@ -238,6 +290,72 @@
     el.className = cls || 'ok';
   }
 
+  // ─── ROLLEN-SCANNER ────────────────────────────────────────────
+  function scanRole(trigger = 'Heartbeat') {
+    const currentRole = state.isLeader ? 'LEADER' : 'FOLLOWER';
+    if (state.roleScan.lastRole !== currentRole) {
+      const timestamp = new Date().toLocaleTimeString();
+      const msg = `[${timestamp}] Rolle gewechselt → ${currentRole} (${trigger}) · Tab ${state.roleScan.tabId}`;
+      state.roleScan.changes.push(msg);
+      state.roleScan.changeCount++;
+      state.roleScan.lastRole = currentRole;
+      // Ins Log schreiben
+      log(`🔍 Rollen-Scan: ${currentRole} (${trigger})`);
+      // In die Scanner-Box eintragen
+      addRoleChangeEntry(msg, state.roleScan.tabId);
+      // An andere Tabs senden
+      broadcast({ type: 'role.change', msg: msg, tabId: state.roleScan.tabId });
+      // UI aktualisieren
+      updateRoleScanUI();
+      // Humorvolle Zusatzmeldung bei bestimmten Triggern
+      if (trigger.includes('übernommen')) {
+        log('🎮 Spielverderber-Scan: Leader-Dieb hat übernommen!');
+      }
+      if (trigger.includes('Pause')) {
+        log('🎮 Spielverderber-Scan: Stop-Troll aktiv!');
+      }
+      if (trigger.includes('Reset')) {
+        log('🎮 Spielverderber-Scan: Reset-Rambo detected!');
+      }
+      if (trigger.includes('sli.open')) {
+        log('🎮 Spielverderber-Scan: Schleusen-Klingelkind spielt wieder!');
+      }
+      if (trigger.includes('Modus')) {
+        log('🎮 Spielverderber-Scan: Modus-Mixer dreht am Rad!');
+      }
+    }
+  }
+
+  function addRoleChangeEntry(msg, tabId) {
+    const entry = document.createElement('div');
+    entry.className = 'entry';
+    const isLeader = msg.includes('LEADER');
+    const isChange = msg.includes('gewechselt');
+    const isSpielverderber = msg.includes('Dieb') || msg.includes('Troll') || msg.includes('Rambo') || msg.includes('Klingelkind') || msg.includes('Mixer');
+    let cls = '';
+    if (isLeader) cls = 'leader';
+    else cls = 'follower';
+    if (isChange) cls += ' change';
+    if (isSpielverderber) cls += ' spielverderber';
+    entry.className = 'entry ' + cls;
+    entry.textContent = msg + (tabId ? ` (Tab ${tabId})` : '');
+    roleScanBox.prepend(entry);
+    // Maximal 20 Einträge behalten
+    while (roleScanBox.children.length > 20) {
+      roleScanBox.removeChild(roleScanBox.lastChild);
+    }
+    document.getElementById('changeCount').textContent = state.roleScan.changeCount;
+  }
+
+  function updateRoleScanUI() {
+    // Wird bereits durch addRoleChangeEntry aktualisiert
+    // Aktuelle Rolle setzen
+    document.getElementById('currentRoleDisplay').textContent = state.isLeader ? 'LEADER' : 'FOLLOWER';
+    document.getElementById('currentRoleDisplay').className = 'badge ' + (state.isLeader ? 'leader' : 'follower');
+    // Status der Scanner-Box
+    document.getElementById('scannerStatus').textContent = '● aktiv';
+  }
+
   // ─── UI-UPDATES ────────────────────────────────────────────────
   function updateAllUI() {
     const sym = ORBIT[state.index] || '?';
@@ -248,19 +366,20 @@
     document.getElementById('naviHeading').textContent = String(state.index * 12).padStart(3,'0') + '°';
     document.getElementById('naviSpeed').textContent = (state.speed * 0.7 + state.index * 0.02).toFixed(1);
     document.getElementById('naviMode').textContent = state.mode;
-    // Axiom‑Zähler
+    // Axiom
     document.getElementById('axiomIQQ').textContent = state.mode === 'IQQ' ? '● aktiv' : '9 → 3 → 9 → 3';
     document.getElementById('axiomOCTA').textContent = state.mode === 'OCTA' ? '● aktiv' : '◉ ◆ △ ▣ ↺';
     document.getElementById('axiomA81').textContent = state.mode === 'A81' ? '● aktiv' : '27 · 81 · 243 · 729';
     // Wegpunkte
     renderWaypoints();
-    // Orbit‑Status
+    // Orbit-Status
     const orbitStatus = document.getElementById('orbitStatus');
     orbitStatus.textContent = state.running ? 'AKTIV' : 'PAUSE';
     orbitStatus.className = 'badge ' + (state.running ? 'aktiv' : 'pause');
-    // sli.open UI
+    // sli.open
     updateSliUI();
-    // Canvas wird im Loop gezeichnet
+    // Rolle
+    updateRoleBadge();
   }
 
   function updateSliUI() {
@@ -282,7 +401,6 @@
   function renderWaypoints() {
     const container = document.getElementById('waypointList');
     container.innerHTML = '';
-    // Zeige die nächsten 8 Symbole ab aktueller Position
     for (let i = 0; i < 8; i++) {
       const idx = (state.index + i) % ORBIT.length;
       const sym = ORBIT[idx];
@@ -299,14 +417,13 @@
     if (btn) btn.classList.add('active');
   }
 
-  // ─── CANVAS-ZEICHNUNG (wie gehabt, aber mit Navi‑Overlay) ────
+  // ─── CANVAS-ZEICHNUNG ──────────────────────────────────────────
   function drawOrbit() {
     const w = canvas.width, h = canvas.height;
     ctx.shadowBlur = 0;
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, w, h);
 
-    // Pfad (letzte 5)
     const history = state.history.slice(-5);
     history.forEach((idx, i) => {
       const alpha = 0.1 + (i / 5) * 0.3;
@@ -328,7 +445,6 @@
       }
     });
 
-    // Hauptsymbol
     const symbol = ORBIT[state.index] || '?';
     ctx.fillStyle = '#6cf';
     ctx.font = '60px Consolas';
@@ -339,7 +455,6 @@
     ctx.fillText(symbol, w / 2, h / 2 - 20);
     ctx.shadowBlur = 0;
 
-    // Index + Axiom
     const axiom = AXIOM_MAP[symbol] || '—';
     ctx.fillStyle = '#5a7a8a';
     ctx.font = '14px Consolas';
@@ -347,12 +462,11 @@
     ctx.textBaseline = 'top';
     ctx.fillText(`#${state.index} · ${axiom}`, w / 2, h / 2 + 40);
 
-    // Speed + Modus + sli.open‑Status
     ctx.fillStyle = '#3a4a5a';
     ctx.font = '11px Consolas';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'bottom';
-    ctx.fillText(`⏩ ${state.speed}× · ${state.mode} · sli.${state.sliOpen ? 'OPEN' : 'CLOSED'}`, 12, h - 6);
+    ctx.fillText(`⏩ ${state.speed}× · ${state.mode} · sli.${state.sliOpen ? 'OPEN' : 'CLOSED'} · Tab ${state.roleScan.tabId}`, 12, h - 6);
     ctx.textAlign = 'right';
     ctx.fillText(`Symbol ${state.index + 1}/${ORBIT.length}`, w - 12, h - 6);
   }
@@ -363,7 +477,6 @@
     state.index = next;
     state.history.push(next);
     if (state.history.length > 10) state.history.shift();
-    // Atomuhr: Takt erhöhen
     state.atomTick++;
     const sym = ORBIT[next];
     const axiom = AXIOM_MAP[sym] || null;
@@ -375,7 +488,7 @@
     broadcast({ type: 'orbit.step', index: state.index, symbol: sym });
   }
 
-  // ─── ATOM-UHR (wird im Loop aktualisiert) ──────────────────────
+  // ─── ATOM-UHR ──────────────────────────────────────────────────
   function updateAtomClock(now) {
     const time = new Date(now);
     const ms = time.getMilliseconds();
@@ -394,6 +507,9 @@
     const delta = now - state.lastFrame;
     state.lastFrame = now;
     state.atomDelta = delta;
+
+    // Rollen-Scan im Loop (bei jedem Frame)
+    scanRole('Heartbeat');
 
     if (state.running && state.isLeader) {
       state.accumulator += delta;
@@ -418,11 +534,16 @@
     state.running = !state.running;
     updateAllUI();
     log(state.running ? '▶ Fortgesetzt' : '⏸ Pause');
+    scanRole(state.running ? 'Fortgesetzt' : 'Pause');
   });
 
   document.getElementById('btnStep').addEventListener('click', () => {
-    if (state.isLeader) stepOrbit();
-    else log('⏭ Schritt nur Leader');
+    if (state.isLeader) {
+      stepOrbit();
+      scanRole('Schritt');
+    } else {
+      log('⏭ Schritt nur Leader');
+    }
   });
 
   document.getElementById('btnReset').addEventListener('click', () => {
@@ -433,7 +554,10 @@
       updateAllUI();
       log('⟲ Reset');
       broadcast({ type: 'orbit.reset' });
-    } else log('⟲ Reset nur Leader');
+      scanRole('Reset');
+    } else {
+      log('⟲ Reset nur Leader');
+    }
   });
 
   document.getElementById('btnSliOpen').addEventListener('click', () => {
@@ -441,11 +565,7 @@
     updateSliUI();
     broadcast({ type: 'sli.open', open: state.sliOpen });
     log(`🔓 sli.open = ${state.sliOpen ? 'OFFEN' : 'GESCHLOSSEN'}`);
-    if (state.sliOpen) {
-      log('🚪 Schleuse offen – externe Navigation möglich');
-    } else {
-      log('🔒 Schleuse geschlossen – nur intern');
-    }
+    scanRole('sli.open');
   });
 
   const speedSlider = document.getElementById('speedSlider');
@@ -455,7 +575,7 @@
     speedLabel.textContent = state.speed + '×';
   });
 
-  // Modus-Buttons (simplifiziert)
+  // Modus-Buttons
   document.querySelectorAll('[id^="btnMode"]').forEach(btn => {
     btn.addEventListener('click', () => {
       const mode = btn.id.replace('btnMode','');
@@ -464,13 +584,14 @@
       updateAllUI();
       broadcast({ type: 'orbit.mode', mode });
       log(`🌀 Modus: ${mode}`);
+      scanRole('Modus: ' + mode);
     });
   });
 
   // Tastatur
   document.addEventListener('keydown', (e) => {
     if (e.key === ' ') { e.preventDefault(); document.getElementById('btnPlay').click(); }
-    if (e.key === 'ArrowRight' && state.isLeader) stepOrbit();
+    if (e.key === 'ArrowRight' && state.isLeader) { stepOrbit(); scanRole('Taste →'); }
     if (e.key === 'r' || e.key === 'R') document.getElementById('btnReset').click();
     if (e.key === 's' || e.key === 'S') document.getElementById('btnSliOpen').click();
   });
@@ -488,10 +609,21 @@
   // ─── INIT ──────────────────────────────────────────────────────
   function init() {
     state.history.push(0);
+    state.roleScan.lastRole = state.isLeader ? 'LEADER' : 'FOLLOWER';
     updateAllUI();
     updateRoleBadge();
     applyModeButtons('IQQ');
-    log('🚀 IKI1UC · Orbit + Navi + Atomuhr + sli.open gestartet');
+    // Scanner-Box initialisieren
+    const initEntry = document.createElement('div');
+    initEntry.className = 'entry';
+    initEntry.textContent = `📡 Scanner gestartet · Tab ${state.roleScan.tabId} · Rolle: ${state.isLeader ? 'LEADER' : 'FOLLOWER'}`;
+    roleScanBox.prepend(initEntry);
+    document.getElementById('changeCount').textContent = '0';
+    document.getElementById('currentRoleDisplay').textContent = state.isLeader ? 'LEADER' : 'FOLLOWER';
+    document.getElementById('currentRoleDisplay').className = 'badge ' + (state.isLeader ? 'leader' : 'follower');
+    document.getElementById('scannerStatus').textContent = '● aktiv';
+    log('🚀 IKI1UC · Orbit + Navi + Atomuhr + Rollen-Scanner gestartet');
+    log(`🔍 Tab-ID: ${state.roleScan.tabId}`);
     log('⌨️  Leertaste=Pause  →=Schritt  r=Reset  s=sli.open');
     requestAnimationFrame(loop);
   }
