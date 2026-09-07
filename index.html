@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>IKI1UC · NAVI · ATOM-UHR · ORBIT · ROLLEN-SCANNER</title>
+<title>IKI1UC · DIAMOND EDITION · CODE‑COMPARE</title>
 
 <style>
     /* ===== BASIS ===== */
@@ -35,23 +35,22 @@
     .waypoint-item { background:#1a1a2a; padding:2px 8px; border-radius:12px; font-size:12px; border:1px solid #2a3a4a; }
     .waypoint-item.active { border-color:#6cf; background:#1a2a3a; color:#6cf; }
 
-    /* ===== ROLLEN-SCANNER ===== */
-    #roleScanBox {
+    /* ===== CODE-COMPARE PANEL ===== */
+    #codeCompareBox {
         background:#0a0a12;
         border:1px solid #2a3a4a;
         border-radius:4px;
         padding:6px;
-        max-height:120px;
+        max-height:140px;
         overflow-y:auto;
         font-size:12px;
         line-height:1.5;
         margin-top:4px;
     }
-    #roleScanBox .entry { padding:2px 4px; border-bottom:1px solid #1a1a2a; }
-    #roleScanBox .leader { color:#ffd700; }
-    #roleScanBox .follower { color:#888; }
-    #roleScanBox .change { color:#ff8a9b; }
-    #roleScanBox .spielverderber { color:#ff6b6b; font-weight:bold; }
+    #codeCompareBox .entry { padding:2px 4px; border-bottom:1px solid #1a1a2a; }
+    #codeCompareBox .ok { color:#8cf0d0; }
+    #codeCompareBox .warn { color:#f0d080; }
+    #codeCompareBox .error { color:#ff6b6b; font-weight:bold; }
 
     /* ===== BUTTONS / BADGES ===== */
     .btn { padding:5px 14px; background:#222; color:#fff; border:1px solid #555; cursor:pointer; font-family:Consolas; font-size:13px; }
@@ -66,6 +65,8 @@
     .badge.geschlossen { border-color:#888; color:#888; }
     .badge.leader { border-color:#ffd700; color:#ffd700; background:#1a1a0a; }
     .badge.follower { border-color:#888; color:#888; }
+    .badge.sync { border-color:#8cf0d0; color:#8cf0d0; }
+    .badge.desync { border-color:#ff6b6b; color:#ff6b6b; }
 
     /* ===== LOG ===== */
     #log { background:#111; padding:10px; height:100px; overflow:auto; font-size:12px; margin-top:10px; border:1px solid #2a3a4a; border-radius:4px; }
@@ -77,7 +78,7 @@
 
     <!-- HEADER -->
     <div class="flex" style="justify-content:space-between;">
-        <h1>🚢 IKI1UC · NAVI · ATOM‑UHR · ORBIT <span style="color:#5a7a8a;font-size:14px;font-weight:300;">mit Rollen‑Scanner</span></h1>
+        <h1>💎 IKI1UC · DIAMOND EDITION <span style="color:#5a7a8a;font-size:14px;font-weight:300;">Code‑Compare · Atomuhr · Orbit</span></h1>
         <div>
             <span class="badge" id="sliStatusBadge">🔒 geschlossen</span>
             <button class="btn sli" id="btnSliOpen">🔓 sli.open</button>
@@ -93,10 +94,11 @@
                 <span>🌀 Orbit: <span id="orbitStatus" class="badge aktiv">AKTIV</span></span>
                 <span>👑 Rolle: <span id="roleStatus" class="badge leader">LEADER</span></span>
                 <span>📡 Sync: <span id="syncStatus" class="ok">● verbunden</span></span>
+                <span>🔐 Code: <span id="codeStatus" class="badge sync">✅ synchron</span></span>
             </div>
         </div>
 
-        <!-- Rechte Spalte: Navigation + Atomuhr + Rollen-Scanner -->
+        <!-- Rechte Spalte: Navigation + Atomuhr + Code-Compare -->
         <div>
             <!-- NAVI-PANEL -->
             <div class="panel">
@@ -130,16 +132,16 @@
                 </div>
             </div>
 
-            <!-- ROLLEN-SCANNER PANEL -->
+            <!-- CODE-COMPARE PANEL -->
             <div class="panel">
-                <h2>🔍 ROLLEN-SCANNER · LIVE <span style="font-size:10px; color:#5a7a8a;">(letzte 20 Wechsel)</span></h2>
-                <div id="roleScanBox">
-                    <div class="entry">📡 Scanner gestartet – warte auf erste Rolle</div>
+                <h2>🔐 CODE‑VERGLEICH · LIVE <span style="font-size:10px; color:#5a7a8a;">(SHA‑256 Fingerprint)</span></h2>
+                <div id="codeCompareBox">
+                    <div class="entry">⏳ Fingerprint wird berechnet …</div>
                 </div>
-                <div style="margin-top:4px; font-size:10px; color:#5a7a8a;">
-                    <span id="scannerStatus">● aktiv</span>
-                    <span style="margin-left:12px;">🔄 Wechsel: <span id="changeCount">0</span></span>
-                    <span style="margin-left:12px;">👑 aktuell: <span id="currentRoleDisplay" class="badge leader">LEADER</span></span>
+                <div style="margin-top:4px; font-size:10px; color:#5a7a8a; display:flex; gap:16px; flex-wrap:wrap;">
+                    <span>🔑 Hash: <span id="myHashDisplay" style="color:#8cf0d0; font-weight:bold;">—</span></span>
+                    <span>🔄 Tabs: <span id="tabCountDisplay">1</span></span>
+                    <span><span id="codeCompareStatus" class="badge sync">✅ synchron</span></span>
                 </div>
             </div>
         </div>
@@ -153,14 +155,15 @@
     </div>
 
     <!-- LOG -->
-    <div id="log">System geladen · Orbit v3 · Navi + Atomuhr + Rollen‑Scanner aktiv</div>
+    <div id="log">💎 Diamond Edition geladen · Code‑Compare aktiv</div>
 
 </div>
 
 <script>
 "use strict";
 /* ================================================================
-   IKI1UC · Orbit v3 + NAVI + ATOM-UHR + ROLLEN-SCANNER
+   IKI1UC · DIAMOND EDITION
+   Orbit + Atomuhr + Navigation + Code‑Compare (SHA‑256)
    ================================================================ */
 
   // ─── KONFIGURATION ──────────────────────────────────────────────
@@ -188,12 +191,18 @@
     sliOpen: false,
     atomTick: 0,
     atomDelta: 0,
-    // Rollen-Scanner
+    tabId: Math.random().toString(36).slice(2, 8).toUpperCase(),
+    // Code‑Compare
+    codeHash: null,
+    remoteHashes: {}, // tabId → hash
+    codeMismatch: false,
+    // Rollen‑Scan (für Integrität)
     roleScan: {
       lastRole: null,
-      changes: [],
-      changeCount: 0,
-      tabId: Math.random().toString(36).substring(2, 6).toUpperCase() // zufällige Tab-ID
+      lastHeartbeat: 0,
+      lastStepTime: null,
+      lastMode: null,
+      mismatches: []
     }
   };
 
@@ -201,7 +210,7 @@
   const canvas = document.getElementById('orbitCanvas');
   const ctx = canvas.getContext('2d');
   const logBox = document.getElementById('log');
-  const roleScanBox = document.getElementById('roleScanBox');
+  const codeCompareBox = document.getElementById('codeCompareBox');
 
   // ─── LEADER-ELECTION ──────────────────────────────────────────
   const LEADER_KEY = 'iki1uc-orbit-leader';
@@ -220,8 +229,6 @@
       localStorage.setItem(LEADER_KEY, String(now));
       state.isLeader = true;
       updateRoleBadge();
-      // Rollenwechsel sofort erfassen
-      scanRole('LEADER (übernommen)');
       log('👑 Leader übernommen');
     }
   }
@@ -230,21 +237,19 @@
     const el = document.getElementById('roleStatus');
     el.textContent = state.isLeader ? 'LEADER' : 'FOLLOWER';
     el.className = 'badge ' + (state.isLeader ? 'leader' : 'follower');
-    // Aktuelle Rolle im Scanner anzeigen
-    document.getElementById('currentRoleDisplay').textContent = state.isLeader ? 'LEADER' : 'FOLLOWER';
-    document.getElementById('currentRoleDisplay').className = 'badge ' + (state.isLeader ? 'leader' : 'follower');
   }
 
   setInterval(tryClaimLeadership, HEARTBEAT_EVERY);
   tryClaimLeadership();
 
-  // ─── BROADCASTCHANNEL (Sync) ──────────────────────────────────
+  // ─── BROADCASTCHANNEL ──────────────────────────────────────────
   let bc = null;
   try {
-    bc = new BroadcastChannel('iki1uc-orbit');
+    bc = new BroadcastChannel('iki1uc-diamond');
     bc.onmessage = (e) => {
       const data = e.data;
       if (!data) return;
+      // Orbit‑Steuerung
       if (data.type === 'orbit.step' && !state.isLeader) {
         state.index = data.index;
         state.history.push(data.index);
@@ -269,9 +274,19 @@
         updateSliUI();
         log(`🔓 sli.open = ${state.sliOpen ? 'OFFEN' : 'GESCHLOSSEN'}`);
       }
-      // Rollenwechsel von anderen Tabs empfangen
-      if (data.type === 'role.change') {
-        addRoleChangeEntry(data.msg, data.tabId);
+      // CODE‑COMPARE: Hash von anderen Tabs empfangen
+      if (data.type === 'code.hash') {
+        state.remoteHashes[data.tabId] = data.hash;
+        updateCodeCompareUI();
+        log(`🔐 Code‑Hash von Tab ${data.tabId} empfangen: ${data.hash.substring(0,12)}…`);
+        // Prüfen, ob Abweichung
+        checkCodeConsistency();
+      }
+      // Tab‑Verlassen erkennen (optional: Heartbeat für Tabs)
+      if (data.type === 'tab.leave') {
+        delete state.remoteHashes[data.tabId];
+        updateCodeCompareUI();
+        log(`👋 Tab ${data.tabId} hat sich verabschiedet`);
       }
     };
     setTimeout(() => syncStatus('● verbunden', 'ok'), 500);
@@ -290,95 +305,173 @@
     el.className = cls || 'ok';
   }
 
-  // ─── ROLLEN-SCANNER ────────────────────────────────────────────
-  function scanRole(trigger = 'Heartbeat') {
+  // ─── CODE‑FINGERPRINT (SHA‑256) ──────────────────────────────
+  async function computeCodeHash() {
+    try {
+      // Lade den aktuellen Quellcode der index.html (mit Cache‑Busting)
+      const url = window.location.href.split('?')[0] + '?t=' + Date.now();
+      const response = await fetch(url);
+      const htmlContent = await response.text();
+
+      // Lade die drei Kern‑JS‑Dateien (falls vorhanden)
+      const jsFiles = ['3.js', '9.js', '81.js'];
+      let fullCode = htmlContent;
+      for (const file of jsFiles) {
+        try {
+          const res = await fetch(file + '?t=' + Date.now());
+          if (res.ok) {
+            const content = await res.text();
+            fullCode += '\n' + content;
+          }
+        } catch (_) { /* Datei existiert nicht – ignorieren */ }
+      }
+
+      // SHA‑256 Hash berechnen
+      const encoder = new TextEncoder();
+      const data = encoder.encode(fullCode);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    } catch (err) {
+      log('⚠️ Fehler beim Code‑Hash: ' + err.message);
+      return null;
+    }
+  }
+
+  // ─── CODE‑VERGLEICH ────────────────────────────────────────────
+  async function initCodeCompare() {
+    const hash = await computeCodeHash();
+    state.codeHash = hash;
+    if (hash) {
+      document.getElementById('myHashDisplay').textContent = hash.substring(0, 16) + '…';
+      // Eigenen Hash broadcasten
+      broadcast({ type: 'code.hash', tabId: state.tabId, hash: hash });
+      log(`🔐 Eigener Code‑Hash: ${hash.substring(0, 16)}… (Tab ${state.tabId})`);
+      // Nach 2 Sekunden nochmal senden, falls andere Tabs später starten
+      setTimeout(() => {
+        broadcast({ type: 'code.hash', tabId: state.tabId, hash: state.codeHash });
+      }, 2000);
+    }
+    updateCodeCompareUI();
+  }
+
+  function checkCodeConsistency() {
+    const myHash = state.codeHash;
+    if (!myHash) return;
+    const otherHashes = Object.values(state.remoteHashes);
+    if (otherHashes.length === 0) {
+      state.codeMismatch = false;
+      document.getElementById('codeStatus').textContent = '✅ synchron';
+      document.getElementById('codeStatus').className = 'badge sync';
+      document.getElementById('codeCompareStatus').textContent = '✅ synchron';
+      document.getElementById('codeCompareStatus').className = 'badge sync';
+      return;
+    }
+    // Prüfe, ob alle anderen Hashes mit meinem übereinstimmen
+    const allMatch = otherHashes.every(h => h === myHash);
+    state.codeMismatch = !allMatch;
+    const statusEl = document.getElementById('codeStatus');
+    const statusCompare = document.getElementById('codeCompareStatus');
+    if (allMatch) {
+      statusEl.textContent = '✅ synchron';
+      statusEl.className = 'badge sync';
+      statusCompare.textContent = '✅ synchron';
+      statusCompare.className = 'badge sync';
+    } else {
+      statusEl.textContent = '⚠️ Abweichung';
+      statusEl.className = 'badge desync';
+      statusCompare.textContent = '⚠️ Code‑Mismatch';
+      statusCompare.className = 'badge desync';
+      // Zeige, welche Tabs abweichen
+      const mismatches = Object.entries(state.remoteHashes)
+        .filter(([id, h]) => h !== myHash)
+        .map(([id]) => id);
+      if (mismatches.length > 0) {
+        log(`⚠️ Code‑Abweichung bei Tab(s): ${mismatches.join(', ')}`);
+        // In die Code‑Compare‑Box eintragen
+        addCodeCompareEntry(`⚠️ Tab ${mismatches.join(', ')} hat abweichenden Code`, 'error');
+      }
+    }
+    updateCodeCompareUI();
+  }
+
+  function updateCodeCompareUI() {
+    const box = document.getElementById('codeCompareBox');
+    box.innerHTML = '';
+    // Eigener Eintrag
+    const myEntry = document.createElement('div');
+    myEntry.className = 'entry';
+    myEntry.textContent = `🔑 Tab ${state.tabId} (ich): ${state.codeHash ? state.codeHash.substring(0,16)+'…' : '—'}`;
+    box.appendChild(myEntry);
+
+    // Andere Tabs
+    for (const [id, hash] of Object.entries(state.remoteHashes)) {
+      const entry = document.createElement('div');
+      entry.className = 'entry';
+      const match = hash === state.codeHash;
+      entry.textContent = `📡 Tab ${id}: ${hash.substring(0,16)+'…'} ${match ? '✅' : '⚠️'}`;
+      if (!match) entry.style.color = '#ff6b6b';
+      box.appendChild(entry);
+    }
+
+    // Anzahl Tabs
+    document.getElementById('tabCountDisplay').textContent = Object.keys(state.remoteHashes).length + 1;
+
+    // Prüfe Konsistenz
+    checkCodeConsistency();
+  }
+
+  function addCodeCompareEntry(msg, type = 'ok') {
+    const box = document.getElementById('codeCompareBox');
+    const entry = document.createElement('div');
+    entry.className = 'entry ' + type;
+    entry.textContent = msg;
+    box.appendChild(entry);
+    while (box.children.length > 20) box.removeChild(box.lastChild);
+  }
+
+  // ─── ROLLEN‑SCAN (Integrität) ─────────────────────────────────
+  function scanRoleIntegrity() {
+    const now = Date.now();
     const currentRole = state.isLeader ? 'LEADER' : 'FOLLOWER';
     if (state.roleScan.lastRole !== currentRole) {
-      const timestamp = new Date().toLocaleTimeString();
-      const msg = `[${timestamp}] Rolle gewechselt → ${currentRole} (${trigger}) · Tab ${state.roleScan.tabId}`;
-      state.roleScan.changes.push(msg);
-      state.roleScan.changeCount++;
+      log(`🔍 Rollenwechsel → ${currentRole} (Tab ${state.tabId})`);
       state.roleScan.lastRole = currentRole;
-      // Ins Log schreiben
-      log(`🔍 Rollen-Scan: ${currentRole} (${trigger})`);
-      // In die Scanner-Box eintragen
-      addRoleChangeEntry(msg, state.roleScan.tabId);
-      // An andere Tabs senden
-      broadcast({ type: 'role.change', msg: msg, tabId: state.roleScan.tabId });
-      // UI aktualisieren
-      updateRoleScanUI();
-      // Humorvolle Zusatzmeldung bei bestimmten Triggern
-      if (trigger.includes('übernommen')) {
-        log('🎮 Spielverderber-Scan: Leader-Dieb hat übernommen!');
-      }
-      if (trigger.includes('Pause')) {
-        log('🎮 Spielverderber-Scan: Stop-Troll aktiv!');
-      }
-      if (trigger.includes('Reset')) {
-        log('🎮 Spielverderber-Scan: Reset-Rambo detected!');
-      }
-      if (trigger.includes('sli.open')) {
-        log('🎮 Spielverderber-Scan: Schleusen-Klingelkind spielt wieder!');
-      }
-      if (trigger.includes('Modus')) {
-        log('🎮 Spielverderber-Scan: Modus-Mixer dreht am Rad!');
-      }
     }
-  }
-
-  function addRoleChangeEntry(msg, tabId) {
-    const entry = document.createElement('div');
-    entry.className = 'entry';
-    const isLeader = msg.includes('LEADER');
-    const isChange = msg.includes('gewechselt');
-    const isSpielverderber = msg.includes('Dieb') || msg.includes('Troll') || msg.includes('Rambo') || msg.includes('Klingelkind') || msg.includes('Mixer');
-    let cls = '';
-    if (isLeader) cls = 'leader';
-    else cls = 'follower';
-    if (isChange) cls += ' change';
-    if (isSpielverderber) cls += ' spielverderber';
-    entry.className = 'entry ' + cls;
-    entry.textContent = msg + (tabId ? ` (Tab ${tabId})` : '');
-    roleScanBox.prepend(entry);
-    // Maximal 20 Einträge behalten
-    while (roleScanBox.children.length > 20) {
-      roleScanBox.removeChild(roleScanBox.lastChild);
+    const hb = Number(localStorage.getItem(LEADER_KEY)) || 0;
+    if (hb < state.roleScan.lastHeartbeat) {
+      state.roleScan.mismatches.push(`⚠️ Heartbeat‑Drift → Tab ${state.tabId}`);
     }
-    document.getElementById('changeCount').textContent = state.roleScan.changeCount;
-  }
-
-  function updateRoleScanUI() {
-    // Wird bereits durch addRoleChangeEntry aktualisiert
-    // Aktuelle Rolle setzen
-    document.getElementById('currentRoleDisplay').textContent = state.isLeader ? 'LEADER' : 'FOLLOWER';
-    document.getElementById('currentRoleDisplay').className = 'badge ' + (state.isLeader ? 'leader' : 'follower');
-    // Status der Scanner-Box
-    document.getElementById('scannerStatus').textContent = '● aktiv';
+    state.roleScan.lastHeartbeat = hb;
+    const stepTime = Math.max(100, 800 - state.speed * 60);
+    if (state.roleScan.lastStepTime !== null && state.roleScan.lastStepTime !== stepTime) {
+      state.roleScan.mismatches.push(`⚠️ StepTime‑Mismatch → Tab ${state.tabId}`);
+    }
+    state.roleScan.lastStepTime = stepTime;
+    if (state.roleScan.lastMode !== null && state.roleScan.lastMode !== state.mode) {
+      state.roleScan.mismatches.push(`⚠️ Mode‑Mismatch → Tab ${state.tabId}`);
+    }
+    state.roleScan.lastMode = state.mode;
   }
 
   // ─── UI-UPDATES ────────────────────────────────────────────────
   function updateAllUI() {
     const sym = ORBIT[state.index] || '?';
     const axiom = AXIOM_MAP[sym] || '—';
-    // Navi
     document.getElementById('naviIndex').textContent = state.index;
     document.getElementById('naviSymbol').textContent = sym;
     document.getElementById('naviHeading').textContent = String(state.index * 12).padStart(3,'0') + '°';
     document.getElementById('naviSpeed').textContent = (state.speed * 0.7 + state.index * 0.02).toFixed(1);
     document.getElementById('naviMode').textContent = state.mode;
-    // Axiom
     document.getElementById('axiomIQQ').textContent = state.mode === 'IQQ' ? '● aktiv' : '9 → 3 → 9 → 3';
     document.getElementById('axiomOCTA').textContent = state.mode === 'OCTA' ? '● aktiv' : '◉ ◆ △ ▣ ↺';
     document.getElementById('axiomA81').textContent = state.mode === 'A81' ? '● aktiv' : '27 · 81 · 243 · 729';
-    // Wegpunkte
     renderWaypoints();
-    // Orbit-Status
     const orbitStatus = document.getElementById('orbitStatus');
     orbitStatus.textContent = state.running ? 'AKTIV' : 'PAUSE';
     orbitStatus.className = 'badge ' + (state.running ? 'aktiv' : 'pause');
-    // sli.open
     updateSliUI();
-    // Rolle
     updateRoleBadge();
   }
 
@@ -417,13 +510,12 @@
     if (btn) btn.classList.add('active');
   }
 
-  // ─── CANVAS-ZEICHNUNG ──────────────────────────────────────────
+  // ─── CANVAS ────────────────────────────────────────────────────
   function drawOrbit() {
     const w = canvas.width, h = canvas.height;
     ctx.shadowBlur = 0;
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, w, h);
-
     const history = state.history.slice(-5);
     history.forEach((idx, i) => {
       const alpha = 0.1 + (i / 5) * 0.3;
@@ -444,7 +536,6 @@
         ctx.stroke();
       }
     });
-
     const symbol = ORBIT[state.index] || '?';
     ctx.fillStyle = '#6cf';
     ctx.font = '60px Consolas';
@@ -454,19 +545,17 @@
     ctx.shadowBlur = 20;
     ctx.fillText(symbol, w / 2, h / 2 - 20);
     ctx.shadowBlur = 0;
-
     const axiom = AXIOM_MAP[symbol] || '—';
     ctx.fillStyle = '#5a7a8a';
     ctx.font = '14px Consolas';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.fillText(`#${state.index} · ${axiom}`, w / 2, h / 2 + 40);
-
     ctx.fillStyle = '#3a4a5a';
     ctx.font = '11px Consolas';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'bottom';
-    ctx.fillText(`⏩ ${state.speed}× · ${state.mode} · sli.${state.sliOpen ? 'OPEN' : 'CLOSED'} · Tab ${state.roleScan.tabId}`, 12, h - 6);
+    ctx.fillText(`⏩ ${state.speed}× · ${state.mode} · Tab ${state.tabId}`, 12, h - 6);
     ctx.textAlign = 'right';
     ctx.fillText(`Symbol ${state.index + 1}/${ORBIT.length}`, w - 12, h - 6);
   }
@@ -508,8 +597,7 @@
     state.lastFrame = now;
     state.atomDelta = delta;
 
-    // Rollen-Scan im Loop (bei jedem Frame)
-    scanRole('Heartbeat');
+    scanRoleIntegrity();
 
     if (state.running && state.isLeader) {
       state.accumulator += delta;
@@ -534,16 +622,11 @@
     state.running = !state.running;
     updateAllUI();
     log(state.running ? '▶ Fortgesetzt' : '⏸ Pause');
-    scanRole(state.running ? 'Fortgesetzt' : 'Pause');
   });
 
   document.getElementById('btnStep').addEventListener('click', () => {
-    if (state.isLeader) {
-      stepOrbit();
-      scanRole('Schritt');
-    } else {
-      log('⏭ Schritt nur Leader');
-    }
+    if (state.isLeader) stepOrbit();
+    else log('⏭ Schritt nur Leader');
   });
 
   document.getElementById('btnReset').addEventListener('click', () => {
@@ -554,7 +637,6 @@
       updateAllUI();
       log('⟲ Reset');
       broadcast({ type: 'orbit.reset' });
-      scanRole('Reset');
     } else {
       log('⟲ Reset nur Leader');
     }
@@ -565,7 +647,6 @@
     updateSliUI();
     broadcast({ type: 'sli.open', open: state.sliOpen });
     log(`🔓 sli.open = ${state.sliOpen ? 'OFFEN' : 'GESCHLOSSEN'}`);
-    scanRole('sli.open');
   });
 
   const speedSlider = document.getElementById('speedSlider');
@@ -575,7 +656,6 @@
     speedLabel.textContent = state.speed + '×';
   });
 
-  // Modus-Buttons
   document.querySelectorAll('[id^="btnMode"]').forEach(btn => {
     btn.addEventListener('click', () => {
       const mode = btn.id.replace('btnMode','');
@@ -584,19 +664,17 @@
       updateAllUI();
       broadcast({ type: 'orbit.mode', mode });
       log(`🌀 Modus: ${mode}`);
-      scanRole('Modus: ' + mode);
     });
   });
 
-  // Tastatur
   document.addEventListener('keydown', (e) => {
     if (e.key === ' ') { e.preventDefault(); document.getElementById('btnPlay').click(); }
-    if (e.key === 'ArrowRight' && state.isLeader) { stepOrbit(); scanRole('Taste →'); }
+    if (e.key === 'ArrowRight' && state.isLeader) stepOrbit();
     if (e.key === 'r' || e.key === 'R') document.getElementById('btnReset').click();
     if (e.key === 's' || e.key === 'S') document.getElementById('btnSliOpen').click();
   });
 
-  // ─── LOG-Funktion ──────────────────────────────────────────────
+  // ─── LOG ────────────────────────────────────────────────────────
   function log(msg) {
     const time = new Date().toLocaleTimeString();
     const line = document.createElement('div');
@@ -607,24 +685,31 @@
   }
 
   // ─── INIT ──────────────────────────────────────────────────────
-  function init() {
+  async function init() {
     state.history.push(0);
-    state.roleScan.lastRole = state.isLeader ? 'LEADER' : 'FOLLOWER';
     updateAllUI();
     updateRoleBadge();
     applyModeButtons('IQQ');
-    // Scanner-Box initialisieren
-    const initEntry = document.createElement('div');
-    initEntry.className = 'entry';
-    initEntry.textContent = `📡 Scanner gestartet · Tab ${state.roleScan.tabId} · Rolle: ${state.isLeader ? 'LEADER' : 'FOLLOWER'}`;
-    roleScanBox.prepend(initEntry);
-    document.getElementById('changeCount').textContent = '0';
-    document.getElementById('currentRoleDisplay').textContent = state.isLeader ? 'LEADER' : 'FOLLOWER';
-    document.getElementById('currentRoleDisplay').className = 'badge ' + (state.isLeader ? 'leader' : 'follower');
-    document.getElementById('scannerStatus').textContent = '● aktiv';
-    log('🚀 IKI1UC · Orbit + Navi + Atomuhr + Rollen-Scanner gestartet');
-    log(`🔍 Tab-ID: ${state.roleScan.tabId}`);
+    log('💎 Diamond Edition gestartet');
+    log(`🔑 Tab‑ID: ${state.tabId}`);
+
+    // Code‑Fingerprint berechnen und broadcasten
+    await initCodeCompare();
+
+    // Heartbeat für Tab‑Verlassen: alle 5 Sekunden den eigenen Hash senden
+    setInterval(() => {
+      if (state.codeHash) {
+        broadcast({ type: 'code.hash', tabId: state.tabId, hash: state.codeHash });
+      }
+    }, 5000);
+
+    // Beim Schließen des Tabs: anderen mitteilen
+    window.addEventListener('beforeunload', () => {
+      broadcast({ type: 'tab.leave', tabId: state.tabId });
+    });
+
     log('⌨️  Leertaste=Pause  →=Schritt  r=Reset  s=sli.open');
+    log('🔐 Code‑Vergleich aktiv – SHA‑256 Fingerprint wird überwacht');
     requestAnimationFrame(loop);
   }
 
